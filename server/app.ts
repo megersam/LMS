@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import { error } from "console";
 require("dotenv").config();
 import { ErrorMiddleware } from "./Middleware/error";
+import userRouter from "./Routes/user.route";
 
 
 // body parser
@@ -29,6 +30,9 @@ app.get('/test', (req:Request, res:Response, next:NextFunction)=>{
         message: "Test Api Working"
     });
 });
+
+// user register api
+app.use("/api/v1", userRouter);
 
 
 // unknown routes
