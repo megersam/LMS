@@ -7,6 +7,9 @@ import  Jwt, { Secret }  from "jsonwebtoken";
 import ejs from 'ejs';
 import path from "path";
 import sendMail from "../utils/sendMail";
+import { error } from "console";
+import { sendToken } from "../utils/jwt";
+import { redis } from "../utils/redis";
 
 // register user
 interface IRegistrationBody{
@@ -106,6 +109,56 @@ export const activateUser = CatchAsyncErrors(async (req:Request, res:Response, n
         });
         res.status(201).json({
             success:true
+        });
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 400));
+    }
+})
+
+// Login request
+interface ILoginRequest{
+    email:string;
+    password:string;
+}
+
+export const loginUser = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+        const {email, password} = req.body as ILoginRequest;
+
+        // check email and password
+        if(!email || !password){
+            return next(new ErrorHandler("Please enter your email and password", 400));
+        }
+
+        // check user
+        const user = await userModel.findOne({email}).select("+password");
+
+        if(!user){
+            return next(new ErrorHandler("Invalid email or password", 400));
+        }
+
+        const isPasswordMatch = await user.comparePassword(password);
+
+        if(!isPasswordMatch){
+            return next(new ErrorHandler("Password didnt match", 400));
+        }
+
+        sendToken(user,200,res);
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 400));
+    }
+});
+
+// logout user
+export const logoutUser = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+        res.cookie("access_token", "", {maxAge:1});
+        res.cookie("refresh_token", "", {maxAge:1});
+        const userId = req.user._id || '';
+        redis.del(userId);
+        res.status(200).json({
+            success: true,
+            message: "Logged Out successfully!"
         });
     } catch (error:any) {
         return next(new ErrorHandler(error.message, 400));

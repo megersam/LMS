@@ -72,6 +72,16 @@ userSchema.pre<IUser>('save', async function(next){
     next();
 });
 
+// sign access token
+userSchema.methods.SignAccessToken = function(){
+    return Jwt.sign({id: this._id}, process.env.ACCESS_TOKEN || '');
+};
+
+// sign refresh token
+userSchema.methods.SignRefreshToken = function(){
+    return Jwt.sign({id:this._id}, process.env.REFRESH_TOKEN || '');
+}
+
 // compare password
 userSchema.methods.comparePassword = async function (enteredPassword:string): Promise<boolean> {
     return await bcrypt.compare(enteredPassword, this.password);
