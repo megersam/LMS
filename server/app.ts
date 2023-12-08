@@ -7,6 +7,7 @@ import { error } from "console";
 require("dotenv").config();
 import { ErrorMiddleware } from "./Middleware/error";
 import userRouter from "./Routes/user.route";
+import courseRouter from "./Routes/course.route";
 
 
 // body parser
@@ -33,6 +34,8 @@ app.get('/test', (req:Request, res:Response, next:NextFunction)=>{
 
 // user register api
 app.use("/api/v1", userRouter);
+
+app.use("/api/v1", courseRouter);
 
 
 // unknown routes
