@@ -5,6 +5,7 @@ import ErrorHandler from "../utils/ErrorHandler";
 import cloudinary from 'cloudinary'
 import { createCourse } from "../services/course.service";
 import CourseModel from "../Models/course.Model";
+import { redis } from "../utils/redis";
 
 
 
@@ -69,14 +70,54 @@ export const editCourse = CatchAsyncErrors(async (req: Request, res: Response, n
 
 // get single course --without purchase.
 export const getSingleCourse = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    
     try {
-        const course = await CourseModel.findById(req.params.id).select("-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links");
 
-        res.status(200).json({
-            success:true,
-            course
-        });
+        const  courseId = req.params.id;
+        const isCatchExist = await redis.get(courseId);
+
+        if(isCatchExist){
+            const course = JSON.parse(isCatchExist);
+            res.status(200).json({
+                success:true,
+                course,
+            });
+        }
+        else{
+            const course = await CourseModel.findById(req.params.id).select("-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links");
+            await redis.set(courseId, JSON.stringify(course));
+            res.status(200).json({
+                success:true,
+                course
+            });
+        }
+
+       
     } catch (error:any) {
         return next(new ErrorHandler(error.message, 400));
     }
-})
+});
+
+// get all courses
+export const getAllCourses = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+
+    
+        const isCatchExist = await redis.get("allCourses");
+        if (isCatchExist) {
+            const course = JSON.parse(isCatchExist);
+        }else{
+            const courses = await CourseModel.find().select("-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links");
+            
+            await redis.set("allCourse", JSON.stringify(courses));
+            res.status(200).json({
+                success:true,
+                courses,
+            });
+        }
+
+        
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 400));
+    }
+});
