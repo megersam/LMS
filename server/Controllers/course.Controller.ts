@@ -266,4 +266,132 @@ export const addAnswer = CatchAsyncErrors(async(req:Request, res:Response, next:
     } catch (error:any) {
         return next(new ErrorHandler(error.message, 500));
     }
+});
+
+// add review in course
+
+interface IAddReviewData{
+    review:string,
+    rating:string,
+    userId:string,
+}
+
+export const addReview = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+        
+        const userCourseList = req.user?.courses;
+        const courseId = req.params.id;
+
+        // check course id if there is exist in userCourseList based on _id
+        const courseExist = userCourseList?.some((course:any)=> course._id.toString() === courseId.toString());
+        if(!courseExist){
+            return next(new ErrorHandler('You are not eligible to write review', 400));
+        }
+
+        const course = await CourseModel.findById(courseId);
+        if(!course){
+            return next(new ErrorHandler('course id are not found', 400));
+        }
+
+        const {review, rating} = req.body as IAddReviewData;
+
+        const reviewData:any = {
+            user:req.user,
+            comment: review,
+            rating,
+        }
+
+        course?.reviews.push(reviewData);
+
+        let avg = 0;
+
+        course?.reviews.forEach((rev:any)=>{
+            avg += rev.rating;
+        });
+
+        if(course){
+            course.ratings = avg / course.reviews.length;
+        }
+
+        // saving it to database
+        await course?.save();
+
+        // send notification
+        const notification = {
+            title: "New Review Added",
+            message: `${req.user?.name} has given a review on ${course?.name}`,
+        }
+
+        const data = {
+            name: req.user?.name,
+            course: course?.name
+        }
+        const html = await ejs.renderFile(path.join(__dirname, "../mails/review.ejs"), data);
+
+        try {
+            await sendMail({
+                email: req.user.email,
+                subject: "New Review created",
+                template: "review.ejs",
+                data,
+            });
+        } catch (error:any) {
+            return next(new ErrorHandler(error.message, 400));
+        }
+
+
+
+        res.status(200).json({
+            success: true,
+            course
+        })
+
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+interface IAddReviewData{
+    comment:string,
+    courseId:string,
+    reviewId:string,
+}
+
+export const addReplyData = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+        const {comment, courseId, reviewId} = req.body as IAddReviewData;
+
+        const course = await CourseModel.findById(courseId);
+
+        if(!course){
+            return next(new ErrorHandler('course not found', 400));
+        }
+
+        const review = course?.reviews?.find((rev:any)=>rev._id.toString() === reviewId);
+
+        if(!review){
+            return next(new ErrorHandler('Review not found!', 400));
+        }
+
+        const replyData:any = {
+            user: req.user,
+            comment,
+        };
+
+        if(!review.commentReplies){
+            review.commentReplies = [];
+        };
+
+      review.commentReplies?.push(replyData);
+
+        await course?.save();
+
+
+        res.status(200).json({
+            success:true,
+            course
+        });
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
 })
