@@ -11,6 +11,7 @@ import { idText } from "typescript";
 import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
+import NotificationModel from "../Models/notificationModel";
 
 
 
@@ -182,6 +183,12 @@ export const addQuestion = CatchAsyncErrors(async(req:Request, res:Response, nex
         // add this question object to course.
         courseContent.questions.push(newQuestion);
 
+        await NotificationModel.create({
+            user: req.user?._id,
+            title: 'New Question Received',
+            message: `You have a question in ${courseContent?.title} course`
+        })
+
         // save the updated course
         await  course?.save();
 
@@ -238,6 +245,11 @@ export const addAnswer = CatchAsyncErrors(async(req:Request, res:Response, next:
 
         if(req.user?._id === question.user._id){
             // create a notification center here...
+            await NotificationModel.create({
+                user: req.user?._id,
+                title: 'New Question Reply Received',
+                message: `You have a question in ${courseContent?.title} course`
+            })
 
         }else{
             const data = {

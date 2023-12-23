@@ -9,6 +9,7 @@ import { ErrorMiddleware } from "./Middleware/error";
 import userRouter from "./Routes/user.route";
 import courseRouter from "./Routes/course.route";
 import orderRouter from "./Routes/order.route";
+import notificationRoute from "./Routes/notification.route";
 
 
 // body parser
@@ -34,7 +35,7 @@ app.get('/test', (req:Request, res:Response, next:NextFunction)=>{
 });
 
 // user register api
-app.use("/api/v1", userRouter, courseRouter, orderRouter);
+app.use("/api/v1", userRouter, courseRouter, orderRouter, notificationRoute);
  
 
 
