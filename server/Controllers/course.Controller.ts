@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { CatchAsyncErrors } from "../Middleware/CatchAsyncErrors";
 import ErrorHandler from "../utils/ErrorHandler";
 import cloudinary from 'cloudinary'
-import { createCourse } from "../services/course.service";
+import { createCourse, getAllCoursesServices } from "../services/course.service";
 import CourseModel from "../Models/course.Model";
 import { redis } from "../utils/redis";
 import mongoose, { mongo } from "mongoose";
@@ -403,6 +403,15 @@ export const addReplyData = CatchAsyncErrors(async(req:Request, res:Response, ne
             success:true,
             course
         });
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+// get all courses
+export const getAllCourse = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+        getAllCoursesServices(res);
     } catch (error:any) {
         return next(new ErrorHandler(error.message, 500));
     }
