@@ -12,6 +12,7 @@ import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
 import NotificationModel from "../Models/notificationModel";
+import { updateUserRoleService } from "../services/user.service";
 
 
 
@@ -412,6 +413,17 @@ export const addReplyData = CatchAsyncErrors(async(req:Request, res:Response, ne
 export const getAllCourse = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
     try {
         getAllCoursesServices(res);
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+// update user role --only admin site
+
+export const updateUserRole = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+    try {
+        const {id, role} = req.body;
+        updateUserRoleService(res, id, role);
     } catch (error:any) {
         return next(new ErrorHandler(error.message, 500));
     }
