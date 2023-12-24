@@ -418,12 +418,24 @@ export const getAllCourse = CatchAsyncErrors(async(req:Request, res:Response, ne
     }
 });
 
-// update user role --only admin site
-
-export const updateUserRole = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
+// delete course --only admin
+export const deleteCourse = CatchAsyncErrors(async(req:Request, res:Response, next:NextFunction)=>{
     try {
-        const {id, role} = req.body;
-        updateUserRoleService(res, id, role);
+        const {id} = req.params;
+        
+        const course = await CourseModel.findById(id);
+
+        if(!course){
+            return next(new ErrorHandler('course does not found', 400));
+        }
+
+        await course.deleteOne({id});
+        await redis.del(id);
+
+        res.status(201).json({
+            success:true,
+            message: 'Course Deleted Successfully',
+        });
     } catch (error:any) {
         return next(new ErrorHandler(error.message, 500));
     }
