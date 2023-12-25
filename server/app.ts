@@ -11,6 +11,7 @@ import courseRouter from "./Routes/course.route";
 import orderRouter from "./Routes/order.route";
 import notificationRoute from "./Routes/notification.route";
 import analyticsRouter from "./Routes/analytics.route";
+import layoutRouter from "./Routes/layout.route";
 
 
 // body parser
@@ -36,7 +37,7 @@ app.get('/test', (req:Request, res:Response, next:NextFunction)=>{
 });
 
 // user register api
-app.use("/api/v1", userRouter, courseRouter, orderRouter, notificationRoute, analyticsRouter);
+app.use("/api/v1", userRouter, courseRouter, orderRouter, notificationRoute, analyticsRouter, layoutRouter);
  
 
 
