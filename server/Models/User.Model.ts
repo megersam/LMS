@@ -1,94 +1,98 @@
 import mongoose, { Model, Schema, Document } from "mongoose";
-import bcrypt from 'bcryptjs'
-require('dotenv').config();
-import  Jwt  from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+require("dotenv").config();
+import Jwt from "jsonwebtoken";
 
-const validator = require('validator');
+const validator = require("validator");
 
-export interface IUser extends Document{
-    name: string;
-    email: string;
-    password: string;
-    avatar: {
-        public_id: string;
-        url: string;
-    };
-    role: string;
-    isVerified: boolean;
-    courses: Array<{courseId: string}>;
-    comparePassword: (password: string) => Promise<boolean>;
-    SignAccessToken: () => string;
-    SignRefreshToken: () => string;
-};
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  avatar: {
+    public_id: string;
+    url: string;
+  };
+  role: string;
+  isVerified: boolean;
+  courses: Array<{ courseId: string }>;
+  comparePassword: (password: string) => Promise<boolean>;
+  SignAccessToken: () => string;
+  SignRefreshToken: () => string;
+}
 
-const userSchema: Schema<IUser> = new mongoose.Schema({
-    name:{
-        type: String,
-        required: [true, 'Please enter your name']
+const userSchema: Schema<IUser> = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Please enter your name"],
     },
     email: {
-        type: String,
-        required: [true, 'Please enter your email'],
-        validate: {
-          validator: function (value: string) {
-            return validator.isEmail(value);
-          },
-          message: 'Please enter a valid email address!',
+      type: String,
+      required: [true, "Please enter your email"],
+      validate: {
+        validator: function (value: string) {
+          return validator.isEmail(value);
         },
-        unique: true,
+        message: "Please enter a valid email address!",
       },
-    password:{
-        type:String,
-        minlength:[6, 'Password must be at least 6 characters'],
-        select:false,
+      unique: true,
     },
-    avatar:{
-        public_id: String,
-        url: String
+    password: {
+      type: String,
+      minlength: [6, "Password must be at least 6 characters"],
+      select: false,
     },
-    role:{
-        type:String,
-        default:'user',
+    avatar: {
+      public_id: String,
+      url: String,
     },
-    isVerified:{
-        type:Boolean,
-        default:false,
+    role: {
+      type: String,
+      default: "user",
     },
-    courses:[
-        {
-            courseId:String,
-        }
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    courses: [
+      {
+        courseId: String,
+      },
     ],
-
-}, {timestamps:true});
+  },
+  { timestamps: true }
+);
 
 // Hash password.
-userSchema.pre<IUser>('save', async function(next){
-    if (!this.isModified('password')) {
-        next();
-    }
-    this.password = await bcrypt.hash(this.password, 10);
+userSchema.pre<IUser>("save", async function (next) {
+  if (!this.isModified("password")) {
     next();
+  }
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
 // sign access token
-userSchema.methods.SignAccessToken = function(){
-    return Jwt.sign({id: this._id}, process.env.ACCESS_TOKEN || '',{
-        expiresIn: "5m"
-    });
+userSchema.methods.SignAccessToken = function () {
+  return Jwt.sign({ id: this._id }, process.env.ACCESS_TOKEN || "", {
+    expiresIn: "5m",
+  });
 };
 
 // sign refresh token
-userSchema.methods.SignRefreshToken = function(){
-    return Jwt.sign({id:this._id}, process.env.REFRESH_TOKEN || '',{
-        expiresIn: "3d"
-    });
-}
+userSchema.methods.SignRefreshToken = function () {
+  return Jwt.sign({ id: this._id }, process.env.REFRESH_TOKEN || "", {
+    expiresIn: "3d",
+  });
+};
 
 // compare password
-userSchema.methods.comparePassword = async function (enteredPassword:string): Promise<boolean> {
-    return await bcrypt.compare(enteredPassword, this.password);
-}
+userSchema.methods.comparePassword = async function (
+  enteredPassword: string
+): Promise<boolean> {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 const userModel: Model<IUser> = mongoose.model("User", userSchema);
 

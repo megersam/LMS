@@ -1,7 +1,7 @@
 import { createRequire as _createRequire } from "module";
-import express, { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from "express";
 export const app = express();
-import cors from 'cors';
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { error } from "console";
 require("dotenv").config();
@@ -13,39 +13,43 @@ import notificationRoute from "./Routes/notification.route";
 import analyticsRouter from "./Routes/analytics.route";
 import layoutRouter from "./Routes/layout.route";
 
-
 // body parser
-app.use(express.json({limit: '50mb'}));
-
+app.use(express.json({ limit: "50mb" }));
 
 // cookie parser
 app.use(cookieParser());
 
-
 // CORS
-app.use(cors({
-    origin: process.env.ORIGIN
-}));
-
+app.use(
+  cors({
+    origin: process.env.ORIGIN,
+  })
+);
 
 // testing api
-app.get('/test', (req:Request, res:Response, next:NextFunction)=>{
-    res.status(200).json({
-        success: true,
-        message: "Test Api Working"
-    });
+app.get("/test", (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).json({
+    success: true,
+    message: "Test Api Working",
+  });
 });
 
 // user register api
-app.use("/api/v1", userRouter, courseRouter, orderRouter, notificationRoute, analyticsRouter, layoutRouter);
- 
-
+app.use(
+  "/api/v1",
+  userRouter,
+  courseRouter,
+  orderRouter,
+  notificationRoute,
+  analyticsRouter,
+  layoutRouter
+);
 
 // unknown routes
-app.all('*', (req:Request, res:Response, next:NextFunction)=>{
-    const err = new Error(`Route ${req.originalUrl} not found`) as any;
-    err.statusCode = 404;
-    next(err);
+app.all("*", (req: Request, res: Response, next: NextFunction) => {
+  const err = new Error(`Route ${req.originalUrl} not found`) as any;
+  err.statusCode = 404;
+  next(err);
 });
 
 app.use(ErrorMiddleware);
