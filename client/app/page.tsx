@@ -4,6 +4,7 @@ import React, {FC, useState} from  'react';
 import Heading from './utils/Heading';
 import Header from './components/Header';
 import Login from './components/Auth/Login';
+import Hero from './components/Route/Hero';
 
 
 interface Props{}
@@ -27,7 +28,7 @@ const Page: FC<Props> = (props)=>{
       setRoute={setRoute}
       route={route}
       />
-      <Login/>
+      <Hero/>
     </div>
   )
 };
